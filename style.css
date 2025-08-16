@@ -1,0 +1,312 @@
+/* --- Import Google Font --- */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+/* --- General Body & Font Styles --- */
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: #333;
+  box-sizing: border-box;
+}
+
+/* --- Main Container & Header --- */
+.container {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+header h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+header p {
+  color: #4b5563;
+  margin-top: 0.5rem;
+}
+
+/* --- Main Layout --- */
+.main-content {
+  display: grid;
+  gap: 2rem;
+}
+
+/* --- Form Styling --- */
+.form-container,
+.expenses-container,
+.chart-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.form-container h2,
+.expenses-header h2,
+.chart-container h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: "Poppins", sans-serif;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  height: 1rem;
+}
+
+input.border-red-500 {
+  border-color: #ef4444;
+}
+
+.submit-btn {
+  width: 100%;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 700;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  font-family: "Poppins", sans-serif;
+}
+
+.submit-btn:hover {
+  background-color: #1d4ed8;
+  transform: scale(1.05);
+}
+
+.submit-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+}
+
+/* --- Expenses List Styling --- */
+.expenses-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem; /* Adjusted margin */
+}
+
+/* ADDED: Styles for filter/sort controls */
+.filter-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap; /* Allows controls to stack on smaller screens */
+}
+.filter-controls .form-group {
+  flex: 1; /* Each control group takes equal space */
+  min-width: 150px; /* Prevents controls from becoming too small */
+  margin-bottom: 0;
+}
+.filter-controls label {
+  font-size: 0.75rem;
+}
+.filter-controls select {
+  padding: 0.5rem 0.75rem;
+}
+
+.total-expenses-container {
+  text-align: right;
+}
+
+.total-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.total-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+#expense-list {
+  max-height: 45vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.expense-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.3s ease;
+}
+
+.expense-item:hover {
+  background-color: #f9fafb;
+}
+
+.expense-item p {
+  margin: 0;
+}
+.expense-item .font-semibold {
+  font-weight: 600;
+  color: #1f2937;
+}
+.expense-item .text-sm {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+.expense-item .text-right {
+  text-align: right;
+}
+.expense-item .font-bold {
+  font-weight: 700;
+}
+.expense-item .text-lg {
+  font-size: 1.125rem;
+}
+.expense-item .text-red-500 {
+  color: #ef4444;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+  font-family: "Poppins", sans-serif;
+}
+
+.delete-btn:hover {
+  color: #dc2626;
+}
+.no-expenses-message {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem 0;
+}
+
+/* --- Responsive Design --- */
+@media (min-width: 1024px) {
+  .main-content {
+    grid-template-columns: repeat(8, 1fr);
+  }
+  .form-section {
+    grid-column: span 2 / span 2;
+  }
+  .expenses-section {
+    grid-column: span 3 / span 3;
+  }
+  .chart-section {
+    grid-column: span 3 / span 3;
+  }
+  header h1 {
+    font-size: 3rem;
+  }
+}
+
+/* ADDED: Modal Styles */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5); /* Black background with opacity */
+}
+
+.modal.show {
+  display: flex; /* Use flex to center content */
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.close-btn {
+  color: #aaa;
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: #333;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
