@@ -66,7 +66,26 @@
                         </div>
                     </div>
 
+                    <div class="summary-cards" aria-label="Expense insights">
+                        <div class="summary-card">
+                            <p class="summary-label">Expenses</p>
+                            <p id="summary-count" class="summary-value">0</p>
+                        </div>
+                        <div class="summary-card">
+                            <p class="summary-label">Average Spend</p>
+                            <p id="summary-average" class="summary-value">LKR 0.00</p>
+                        </div>
+                        <div class="summary-card">
+                            <p class="summary-label">Top Category</p>
+                            <p id="summary-category" class="summary-value">-</p>
+                        </div>
+                    </div>
+
                     <div class="filter-controls">
+                        <div class="form-group">
+                            <label for="search-expense">Search by description</label>
+                            <input type="search" id="search-expense" placeholder="e.g. grocery, fuel">
+                        </div>
                         <div class="form-group">
                             <label for="category-filter">Filter by Category</label>
                             <select id="category-filter">

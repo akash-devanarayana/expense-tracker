@@ -14,6 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Filter and Sort controls
   const categoryFilter = document.getElementById("category-filter");
   const sortBy = document.getElementById("sort-by");
+  const searchExpense = document.getElementById("search-expense");
+
+  const summaryCount = document.getElementById("summary-count");
+  const summaryAverage = document.getElementById("summary-average");
+  const summaryCategory = document.getElementById("summary-category");
 
   // Error message paragraphs for main form
   const descriptionError = document.getElementById("description-error");
@@ -157,6 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Listeners for filter and sort dropdowns
   categoryFilter.addEventListener("change", applyFiltersAndSort);
   sortBy.addEventListener("change", applyFiltersAndSort);
+  searchExpense.addEventListener("input", applyFiltersAndSort);
 
   // Listeners to close the edit modal
   closeBtn.addEventListener("click", () => editModal.classList.remove("show"));
@@ -215,7 +221,15 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
 
-    // 2. Apply Sorting
+    // 2. Apply text search
+    const searchValue = searchExpense.value.trim().toLowerCase();
+    if (searchValue) {
+      processedExpenses = processedExpenses.filter((expense) =>
+        expense.description.toLowerCase().includes(searchValue)
+      );
+    }
+
+    // 3. Apply Sorting
     const sortValue = sortBy.value;
     switch (sortValue) {
       case "date-desc":
@@ -232,14 +246,48 @@ document.addEventListener("DOMContentLoaded", () => {
         processedExpenses.sort((a, b) => b.amount - a.amount);
         break;
       case "amount-asc":
-        processedExpenses.sort((a, b) => a.amount - a.amount);
+        processedExpenses.sort((a, b) => a.amount - b.amount);
         break;
     }
 
-    // 3. Render the processed data to the list and chart
+    // 4. Render the processed data to the list and chart
     renderExpenses(processedExpenses);
+    renderSummary(processedExpenses);
     renderChart(processedExpenses);
   }
+
+  const renderSummary = (expenses) => {
+    const count = expenses.length;
+    const total = expenses.reduce(
+      (sum, expense) => sum + parseFloat(expense.amount),
+      0
+    );
+    const average = count ? total / count : 0;
+
+    const categoryTotals = expenses.reduce((acc, expense) => {
+      const category = expense.category;
+      const amount = parseFloat(expense.amount);
+      if (!acc[category]) acc[category] = 0;
+      acc[category] += amount;
+      return acc;
+    }, {});
+
+    let topCategory = "-";
+    let topCategoryTotal = 0;
+    for (const [category, amount] of Object.entries(categoryTotals)) {
+      if (amount > topCategoryTotal) {
+        topCategory = category;
+        topCategoryTotal = amount;
+      }
+    }
+
+    summaryCount.textContent = count;
+    summaryAverage.textContent = `LKR ${average.toFixed(2)}`;
+    summaryCategory.textContent =
+      topCategory === "-"
+        ? topCategory
+        : `${topCategory} (LKR ${topCategoryTotal.toFixed(2)})`;
+  };
 
   // Opens and populates the edit modal with the correct expense data
   function openEditModal(id) {
