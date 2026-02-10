@@ -1,9 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const STORAGE_KEY = "expense-tracker-items";
+
   // Main form and list elements
   const expenseForm = document.getElementById("expense-form");
   const expenseList = document.getElementById("expense-list");
   const totalExpenses = document.getElementById("total-expenses");
-  const noExpensesMessage = document.getElementById("no-expenses");
 
   // Main form input fields
   const descriptionInput = document.getElementById("description");
@@ -14,6 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Filter and Sort controls
   const categoryFilter = document.getElementById("category-filter");
   const sortBy = document.getElementById("sort-by");
+  const searchExpense = document.getElementById("search-expense");
+
+  const summaryCount = document.getElementById("summary-count");
+  const summaryAverage = document.getElementById("summary-average");
+  const summaryCategory = document.getElementById("summary-category");
 
   // Error message paragraphs for main form
   const descriptionError = document.getElementById("description-error");
@@ -36,12 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Set default date for the main form to today
   dateInput.valueAsDate = new Date();
 
-  // --- STATE VARIABLES ---
   let expenseChart = null;
-  // Master list to hold all expenses fetched from the server
-  let allExpenses = [];
+  let allExpenses = loadExpenses();
 
-  // --- FORM VALIDATION ---
   const validateField = (field, errorElement, message) => {
     if (!field.value.trim()) {
       errorElement.textContent = message;
@@ -65,10 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return true;
   };
 
-  // --- EVENT LISTENERS ---
-
-  // Listener for adding a new expense
-  expenseForm.addEventListener("submit", async (e) => {
+  expenseForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
     const isDescriptionValid = validateField(
@@ -82,132 +82,86 @@ document.addEventListener("DOMContentLoaded", () => {
       categoryError,
       "Please select a category."
     );
-    const isDateValid = validateField(
-      dateInput,
-      dateError,
-      "Date is required."
-    );
+    const isDateValid = validateField(dateInput, dateError, "Date is required.");
 
     if (
       !isDescriptionValid ||
       !isAmountValid ||
       !isCategoryValid ||
       !isDateValid
-    )
+    ) {
       return;
-
-    const formData = new FormData(expenseForm);
-    try {
-      const response = await fetch("add_expense.php", {
-        method: "POST",
-        body: formData,
-      });
-      const result = await response.json();
-      if (result.success) {
-        expenseForm.reset();
-        dateInput.valueAsDate = new Date();
-        descriptionInput.classList.remove("border-red-500");
-        amountInput.classList.remove("border-red-500");
-        categoryInput.classList.remove("border-red-500");
-        dateInput.classList.remove("border-red-500");
-        fetchExpenses(); // Re-fetch all data
-      } else {
-        alert(result.message || "An error occurred. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An unexpected error occurred.");
     }
+
+    const newExpense = {
+      id: String(Date.now()),
+      description: descriptionInput.value.trim(),
+      amount: parseFloat(amountInput.value),
+      category: categoryInput.value,
+      expense_date: dateInput.value,
+    };
+
+    allExpenses.unshift(newExpense);
+    saveExpenses(allExpenses);
+
+    expenseForm.reset();
+    dateInput.valueAsDate = new Date();
+    applyFiltersAndSort();
   });
 
-  // Combined listener for Edit and Delete buttons on the expense list
-  expenseList.addEventListener("click", async (e) => {
+  expenseList.addEventListener("click", (e) => {
     const target = e.target;
 
-    // Handle Delete
     if (target.classList.contains("delete-btn")) {
       const id = target.dataset.id;
       if (confirm("Are you sure you want to delete this expense?")) {
-        try {
-          const response = await fetch("delete_expense.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: `id=${id}`,
-          });
-          const result = await response.json();
-          if (result.success) {
-            fetchExpenses(); // Re-fetch all data
-          } else {
-            alert(result.message || "Failed to delete expense.");
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          alert("An unexpected error occurred while deleting.");
-        }
+        allExpenses = allExpenses.filter((expense) => expense.id !== id);
+        saveExpenses(allExpenses);
+        applyFiltersAndSort();
       }
     }
 
-    // Handle Edit
     if (target.classList.contains("edit-btn")) {
       const id = target.dataset.id;
       openEditModal(id);
     }
   });
 
-  // Listeners for filter and sort dropdowns
   categoryFilter.addEventListener("change", applyFiltersAndSort);
   sortBy.addEventListener("change", applyFiltersAndSort);
+  searchExpense.addEventListener("input", applyFiltersAndSort);
 
-  // Listeners to close the edit modal
   closeBtn.addEventListener("click", () => editModal.classList.remove("show"));
   window.addEventListener("click", (e) => {
-    if (e.target == editModal) {
+    if (e.target === editModal) {
       editModal.classList.remove("show");
     }
   });
 
-  // Listener for submitting the changes from the edit form
-  editForm.addEventListener("submit", async (e) => {
+  editForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const formData = new FormData(editForm);
-    try {
-      const response = await fetch("update_expense.php", {
-        method: "POST",
-        body: formData,
-      });
-      const result = await response.json();
+    const id = editExpenseId.value;
+    const updatedExpense = {
+      id,
+      description: editDescriptionInput.value.trim(),
+      amount: parseFloat(editAmountInput.value),
+      category: editCategoryInput.value,
+      expense_date: editDateInput.value,
+    };
 
-      if (result.success) {
-        editModal.classList.remove("show"); // Hide modal
-        fetchExpenses(); // Re-fetch all data to show changes
-      } else {
-        alert(result.message || "Failed to update expense.");
-      }
-    } catch (error) {
-      console.error("Error updating expense:", error);
-      alert("An unexpected error occurred while updating.");
-    }
+    allExpenses = allExpenses.map((expense) =>
+      expense.id === id ? updatedExpense : expense
+    );
+
+    saveExpenses(allExpenses);
+    editModal.classList.remove("show");
+    applyFiltersAndSort();
   });
 
-  // --- DATA PROCESSING AND RENDERING ---
-
-  // Fetches all expense data from the server
-  const fetchExpenses = async () => {
-    try {
-      const response = await fetch("get_expense.php");
-      allExpenses = await response.json(); // Store data in the master list
-      applyFiltersAndSort(); // Call the central function to process and render
-    } catch (error) {
-      console.error("Error fetching expenses:", error);
-    }
-  };
-
-  // Central function to process and render data based on user controls
   function applyFiltersAndSort() {
     let processedExpenses = [...allExpenses];
 
-    // 1. Apply Category Filter
     const selectedCategory = categoryFilter.value;
     if (selectedCategory) {
       processedExpenses = processedExpenses.filter(
@@ -215,7 +169,13 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
 
-    // 2. Apply Sorting
+    const searchValue = searchExpense.value.trim().toLowerCase();
+    if (searchValue) {
+      processedExpenses = processedExpenses.filter((expense) =>
+        expense.description.toLowerCase().includes(searchValue)
+      );
+    }
+
     const sortValue = sortBy.value;
     switch (sortValue) {
       case "date-desc":
@@ -232,21 +192,48 @@ document.addEventListener("DOMContentLoaded", () => {
         processedExpenses.sort((a, b) => b.amount - a.amount);
         break;
       case "amount-asc":
-        processedExpenses.sort((a, b) => a.amount - a.amount);
+        processedExpenses.sort((a, b) => a.amount - b.amount);
         break;
     }
 
-    // 3. Render the processed data to the list and chart
     renderExpenses(processedExpenses);
+    renderSummary(processedExpenses);
     renderChart(processedExpenses);
   }
 
-  // Opens and populates the edit modal with the correct expense data
+  const renderSummary = (expenses) => {
+    const count = expenses.length;
+    const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const average = count ? total / count : 0;
+
+    const categoryTotals = expenses.reduce((acc, expense) => {
+      const category = expense.category;
+      if (!acc[category]) acc[category] = 0;
+      acc[category] += expense.amount;
+      return acc;
+    }, {});
+
+    let topCategory = "-";
+    let topCategoryTotal = 0;
+    for (const [category, amount] of Object.entries(categoryTotals)) {
+      if (amount > topCategoryTotal) {
+        topCategory = category;
+        topCategoryTotal = amount;
+      }
+    }
+
+    summaryCount.textContent = count;
+    summaryAverage.textContent = `LKR ${average.toFixed(2)}`;
+    summaryCategory.textContent =
+      topCategory === "-"
+        ? topCategory
+        : `${topCategory} (LKR ${topCategoryTotal.toFixed(2)})`;
+  };
+
   function openEditModal(id) {
-    const expenseToEdit = allExpenses.find((expense) => expense.id == id);
+    const expenseToEdit = allExpenses.find((expense) => expense.id === id);
     if (!expenseToEdit) return;
 
-    // Populate the form fields in the modal
     editExpenseId.value = expenseToEdit.id;
     editDescriptionInput.value = expenseToEdit.description;
     editAmountInput.value = expenseToEdit.amount;
@@ -256,7 +243,6 @@ document.addEventListener("DOMContentLoaded", () => {
     editModal.classList.add("show");
   }
 
-  // Renders the list of expenses in the UI
   const renderExpenses = (expenses) => {
     expenseList.innerHTML = "";
     let currentTotal = 0;
@@ -267,8 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       expenses.forEach((expense) => {
         const item = document.createElement("div");
-        item.className =
-          "expense-item flex justify-between items-center p-4 border-b border-gray-200";
+        item.className = "expense-item";
         item.innerHTML = `
             <div>
                 <p class="font-semibold text-gray-800">${escapeHTML(
@@ -281,41 +266,36 @@ document.addEventListener("DOMContentLoaded", () => {
         )}</span></p>
             </div>
             <div class="text-right">
-                <p class="font-bold text-lg text-red-500">-LKR ${parseFloat(
-                  expense.amount
-                ).toFixed(2)}</p>
+                <p class="font-bold text-lg text-red-500">-LKR ${expense.amount.toFixed(
+                  2
+                )}</p>
                  <div class="expense-actions">
-                    <button data-id="${
-                      expense.id
-                    }" class="edit-btn text-xs text-gray-400 hover:text-blue-600 transition-colors">Edit</button>
-                    <button data-id="${
-                      expense.id
-                    }" class="delete-btn text-xs text-gray-400 hover:text-red-600 transition-colors">Delete</button>
+                    <button data-id="${expense.id}" class="edit-btn">Edit</button>
+                    <button data-id="${expense.id}" class="delete-btn">Delete</button>
                  </div>
             </div>
         `;
         expenseList.appendChild(item);
-        currentTotal += parseFloat(expense.amount);
+        currentTotal += expense.amount;
       });
     }
     totalExpenses.textContent = `LKR ${currentTotal.toFixed(2)}`;
   };
 
-  // Renders the pie chart based on the provided expenses
   const renderChart = (expenses) => {
     const ctx = document.getElementById("expenseChart").getContext("2d");
 
     const categoryTotals = expenses.reduce((acc, expense) => {
       const { category, amount } = expense;
       if (!acc[category]) acc[category] = 0;
-      acc[category] += parseFloat(amount);
+      acc[category] += amount;
       return acc;
     }, {});
 
     const chartLabels = Object.keys(categoryTotals);
     const chartData = Object.values(categoryTotals);
 
-    if (expenseChart) expenseChart.destroy(); // Destroy old chart before drawing new one
+    if (expenseChart) expenseChart.destroy();
 
     expenseChart = new Chart(ctx, {
       type: "pie",
@@ -347,9 +327,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  // --- UTILITY FUNCTION ---
+  function saveExpenses(expenses) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+  }
+
+  function loadExpenses() {
+    const rawExpenses = localStorage.getItem(STORAGE_KEY);
+    if (!rawExpenses) return [];
+
+    try {
+      const parsedExpenses = JSON.parse(rawExpenses);
+      return parsedExpenses.map((expense) => ({
+        ...expense,
+        amount: parseFloat(expense.amount),
+      }));
+    } catch {
+      return [];
+    }
+  }
+
   function escapeHTML(str) {
-    return str.replace(
+    return String(str).replace(
       /[&<>'"]/g,
       (tag) =>
         ({
@@ -362,6 +360,5 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // --- INITIAL LOAD ---
-  fetchExpenses();
+  applyFiltersAndSort();
 });

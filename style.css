@@ -136,6 +136,33 @@ input.border-red-500 {
   margin-bottom: 1rem; /* Adjusted margin */
 }
 
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.summary-label {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.summary-value {
+  margin: 0.2rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
 /* ADDED: Styles for filter/sort controls */
 .filter-controls {
   display: flex;
@@ -152,6 +179,10 @@ input.border-red-500 {
   font-size: 0.75rem;
 }
 .filter-controls select {
+  padding: 0.5rem 0.75rem;
+}
+
+.filter-controls input {
   padding: 0.5rem 0.75rem;
 }
 
@@ -226,6 +257,26 @@ input.border-red-500 {
   font-family: "Poppins", sans-serif;
 }
 
+.edit-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-right: 0.75rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+  font-family: "Poppins", sans-serif;
+}
+
+.edit-btn:hover {
+  color: #2563eb;
+}
+
+.expense-actions {
+  margin-top: 0.35rem;
+}
+
 .delete-btn:hover {
   color: #dc2626;
 }
@@ -251,6 +302,12 @@ input.border-red-500 {
   }
   header h1 {
     font-size: 3rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
   }
 }
 
